@@ -57,6 +57,10 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
         return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
             digest, size)
 
+    def get_credentials(self):
+        creds = Credential.query.filter_by(user_id = self.id)
+        return creds.order_by(Credential.established.desc())
+
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode({'reset_password': self.id, 'exp': time() + expires_in},
             current_app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
@@ -120,8 +124,8 @@ class Credential(db.Model):
     username = db.Column(db.String(64), index=True)
     password = db.Column(db.String(64))
     comments = db.Column(db.String(140), index=True, unique=True)
-    establised = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    established = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
         return '<credential {} for {}>'.format(self.username, self.comments)

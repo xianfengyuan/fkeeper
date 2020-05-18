@@ -18,13 +18,13 @@ def before_request():
 def index():
     form = CredentialForm()
     if form.validate_on_submit():
-        credential = Credential(username=form.username.data, owner=current_user)
+        credential = Credential(username=form.username.data, password=form.password.data, comments=form.comments.data, owner=current_user)
         db.session.add(credential)
         db.session.commit()
         flash('Your credential db is now live!')
         return redirect(url_for('main.index'))
     page = request.args.get('page', 1, type=int)
-    credentials = current_user.credentials().paginate(
+    credentials = current_user.get_credentials().paginate(
         page, current_app.config['POSTS_PER_PAGE'], False
     )
     next_url = url_for('main.index', page=credentials.next_num) \
@@ -39,7 +39,7 @@ def index():
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
-    credentials = user.credentials.order_by(Credential.timestamp.desc()).paginate(
+    credentials = user.credentials.order_by(Credential.established.desc()).paginate(
         page, current_app.config['POSTS_PER_PAGE'], False)
     next_url = url_for('main.user', username=user.username, page=credentials.next_num) \
         if credentials.has_next else None
