@@ -43,3 +43,10 @@ class EditCredentialForm(FlaskForm):
             credential = Credential.query.filter_by(comments=self.comments.data).first()
             if credential is not None:
                 raise ValidationError('Please use different comments.')
+
+class DeleteCredentialForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = StringField('Password', validators=[DataRequired()])
+    comments = TextAreaField('Comments', validators=[DataRequired(), Length(min=1, max=140)])
+    established = DateTimeField(format='%b %d %Y, %I:%M:%S %p')
+    submit = SubmitField('Confirm')

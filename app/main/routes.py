@@ -2,7 +2,7 @@ from app import db
 from flask import render_template, flash, redirect, url_for, request, current_app
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import User, Credential
-from app.main.forms import CredentialForm, EditProfileForm, EditCredentialForm
+from app.main.forms import CredentialForm, EditProfileForm, EditCredentialForm, DeleteCredentialForm
 from datetime import datetime
 from dateutil import tz
 from app.main import bp
@@ -86,3 +86,24 @@ def edit_credential(id):
         form.comments.data = credential.comments
         form.established.data = utc.astimezone(to_zone)
     return render_template('edit_credential.html', title='Edit Credential', form=form)
+
+@bp.route('/delete_credential/<id>', methods=['GET', 'POST'])
+@login_required
+def delete_credential(id):
+    credential = Credential.query.filter_by(id=id).first_or_404()
+    form = DeleteCredentialForm()
+    if form.validate_on_submit():
+        db.session.delete(credential)
+        db.session.commit()
+        flash('You credential have been deleted.')
+        return redirect(url_for('main.index'))
+    elif request.method == 'GET':
+        from_zone = tz.tzutc()
+        to_zone = tz.tzlocal()
+        utc = credential.established
+        utc = utc.replace(tzinfo=from_zone)
+        form.username.data = credential.username
+        form.password.data = credential.password
+        form.comments.data = credential.comments
+        form.established.data = utc.astimezone(to_zone)
+    return render_template('delete_credential.html', title='Delete Credential', form=form)
