@@ -129,3 +129,21 @@ class Credential(db.Model):
 
     def __repr__(self):
         return '<credential {} for {}>'.format(self.username, self.comments)
+
+    def to_dict(self):
+        data = {
+            'id': self.id,
+            'username': self.username,
+            'password': self.password,
+            'comments': self.comments,
+            'established': self.established,
+            '_links': {
+                'self': url_for('api.get_user', id=self.user_id)
+            }
+        }
+        return data
+
+    def from_dict(self, data):
+        for field in ['username', 'password', 'comments']:
+            if field in data:
+                setattr(self, field, data[field])
