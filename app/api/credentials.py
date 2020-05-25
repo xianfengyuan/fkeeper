@@ -4,6 +4,7 @@ from app import db
 from app.models import User, Credential
 from app.api.errors import bad_request
 from app.api.auth import token_auth
+from datetime import datetime
 
 @bp.route('/credentials/<int:id>', methods=['POST'])
 @token_auth.login_required
@@ -36,3 +37,16 @@ def delete_credential(id):
     response.status_code = 201
     response.headers['Location'] = url_for('api.get_user', id=credential.user_id)
     return response
+
+@bp.route('/credentials/<int:id>', methods=['PUT'])
+@token_auth.login_required
+def update_credential(id):
+    credential = Credential.query.get_or_404(id)
+    data = request.get_json() or {}
+    if 'comments' in data and data['comments'] != credential.comments and \
+            Credential.query.filter_by(comments=data['comments']).first():
+        return bad_request('please use a different comment')
+    credential.from_dict(data)
+    credential.established = datetime.utcnow()
+    db.session.commit()
+    return jsonify(credential.to_dict())
